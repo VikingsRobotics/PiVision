@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "thread": "cpp",
+        "*.inc": "cpp",
+        "type_traits": "cpp",
+        "bit": "cpp"
+    }
+}
