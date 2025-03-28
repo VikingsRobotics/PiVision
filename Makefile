@@ -17,7 +17,7 @@ clean:
 OBJS=main.o
 
 ${EXE}: ${OBJS}
-	${CXX} -pthread -g -o $@ $^ ${DEPS_LIBS} -Wl,--unresolved-symbols=ignore-in-shared-libs
+	${CXX} -pthread -Wno-psabi -g -o $@ $^ ${DEPS_LIBS} -Wl,--unresolved-symbols=ignore-in-shared-libs
 
 .cpp.o:
-	${CXX} -pthread -g -Og -c -o $@ -std=c++20 ${CXXFLAGS} ${DEPS_CFLAGS} $<
+	${CXX} -pthread -Wno-paabi- -g -Og -c -o $@ -std=c++20 ${CXXFLAGS} ${DEPS_CFLAGS} $<
