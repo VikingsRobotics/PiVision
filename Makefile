@@ -20,4 +20,4 @@ ${EXE}: ${OBJS}
 	${CXX} -pthread -Wno-psabi -g -o $@ $^ ${DEPS_LIBS} -Wl,--unresolved-symbols=ignore-in-shared-libs
 
 .cpp.o:
-	${CXX} -pthread -Wno-paabi- -g -Og -c -o $@ -std=c++20 ${CXXFLAGS} ${DEPS_CFLAGS} $<
+	${CXX} -pthread -Wno-psabi- -g -Og -c -o $@ -std=c++20 ${CXXFLAGS} ${DEPS_CFLAGS} $<
