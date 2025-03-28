@@ -287,8 +287,11 @@ public:
     estimator{estimatorConfig} {
       detector.SetConfig(detectorConfig);
       detector.SetQuadThresholdParameters(detectorThres);
-      detector.AddFamily("tag36h11",2);
-      tags.reserve(30);
+      // 3 allocates 932 MB, which we are okay with, we have enough memory to manage
+      detector.AddFamily("tag36h11",3);
+      // Only expect to see at maximum of 22 tag, but hold possibility for more
+      tags.reserve(22);
+      fmt::print("Setting up April Tag Pipeline\n");
   }
   
   frc::AprilTagDetector detector { };
@@ -307,6 +310,12 @@ public:
   std::vector<DetectedResults> tags;
   cv::Scalar outlineColor{ 0, 255, 0 };
   cv::Scalar crossColor{ 0, 0, 255 };
+
+  /*
+    We grayscale the image and then pass it through the detector.
+    We anotate the colored image to show the results that we see back to the dashboard. 
+    Source: https://github.com/wpilibsuite/allwpilib/blob/main/wpilibcExamples/src/main/cpp/examples/AprilTagsVision/cpp/Robot.cpp
+  */
 
   void Process(cv::Mat& mat) override {
       cv::cvtColor(mat, grayMat, cv::COLOR_BGR2GRAY);
@@ -355,6 +364,12 @@ public:
 };
 }  // namespace
 
+/*
+  This version of gcc (10) does not support the full implemenation of c++20.
+  Source: https://stackoverflow.com/questions/67521312/safe-equivalent-of-stdbit-cast-in-c11
+  Edited to is_trivial because is_pod is deprecated and don't plan to use structs
+*/
+
 template <class T2, class T1>
 T2 bit_cast(T1 t1) {
   static_assert(sizeof(T1)==sizeof(T2), "Types must match sizes");
@@ -371,6 +386,7 @@ int main(int argc, char* argv[]) {
 
   // read configuration
   if (!ReadConfig()) return EXIT_FAILURE;
+  fmt::print("Running raspberry Pi April Tag Detector program.");
 
   // start NetworkTables
   auto ntinst = nt::NetworkTableInstance::GetDefault();
@@ -400,6 +416,7 @@ int main(int argc, char* argv[]) {
       nt::RawPublisher tagsPublisher = tagsTable->GetRawTopic("tag").Publish("AprilTagWithConfidence");
       std::array<uint8_t,4> defaultPack { 0, 0, 0, 0};
       tagsPublisher.SetDefault(std::span<uint8_t,4>{defaultPack});
+      fmt::print("Setting Network tables to default\n");
       MyPipeline camPipeline {
         frc::AprilTagPoseEstimator::Config{
           .tagSize = 6.5_in,
@@ -437,6 +454,16 @@ int main(int argc, char* argv[]) {
         data[1] = 0b10000000 | times;
         data[2] = 0;
         data[3] = 0;
+
+        if(numOfFoundTags > 22)
+        {
+          fmt::print("Found too many tags! Continuing to next iteration.\n");
+          //Pretend we saw no tags
+          numOfFoundTags = 0;
+          data[0] = 0;
+          // This iteration is NOT valid
+          data[1] = data[1] & 0b01111111;
+        }
 
         constexpr uint8_t * at = data.data() + 4;
 
