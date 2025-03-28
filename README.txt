@@ -1,3 +1,5 @@
+Project template taken from https://github.com/wpilibsuite/WPILibPi
+
 =======================
 Building locally on rPi
 =======================
